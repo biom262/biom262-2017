@@ -1,0 +1,127 @@
+---
+title: "BIOM262 Homework from 17 and 19 January 2017 "
+output: html_notebook
+---
+
+### Problem 1
+
+Write code to make a vector that contains the prime numbers from 2 to 500.  Use programming to do it, don't just write down "myAnswer=c(2,3,5,7,...)"  A prime number is a natural number (positive integer) that only has two divisors (integers that divide it evenly), 1 and itself.  In addition to the material about for loops and if statements and the print() command that we talked about on Tuesday, the following might help:
+```{r}
+#floor - the integer below a number
+floor(3.626)
+```
+
+```{r}
+# c() is the 'concatenate' command.  It is used to declare vectors, but can also be used to grow them:
+vectToGrow=c()
+vectToGrow
+vectToGrow=c(vectToGrow,4)
+vectToGrow
+vectToGrow=c(vectToGrow,6)
+vectToGrow
+vectToGrow=c(vectToGrow,-4)
+vectToGrow
+```
+
+
+
+
+
+
+
+
+### Problem 2
+
+You'll find two sets of data at:
+http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/timeDataWide_YFP.csv
+and
+http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/timeDataWide_CFP.csv
+
+The data is from yeast where two genes in the galactose pathway have been labeled with fluorescent proteins: Gal1p with CFP and Gal3p with YFP.  Individual cells were imaged under a microscope for hours and their CFP and YFP levels were measured.  Each cell was given a unique ID#. You'll notice that the data is organized conveniently for humans but not for programmers/data analysts.  You'll first need to tidy it.
+
+The timepoints are labeled as frame.0, frame.1, frame.2, etc.  There were both experimental (fluorescently labeled) and control (no fluorescent proteins) cells in the experiment.  Unfortunately the YFP and CFP values are not together in the same table so you'll have to merge them somehow.
+
+Each cell has its own unique ID number.  Is this a quantitative or categorical variable?
+
+Note that there are a lot of NAs in the data.  There is no data for that cell for those timepoints, usually because it moved out of the field of view or because it hadn't been born yet. For our purposes, these NAs are useless and just take up extra space.  Take a look at the documentation for gather (?gather) and read what it says about na.rm
+
+
+Make the following plots: (note that these might take a while because there are a lot of cells.  If they are taking way too long to plot, then go up to the initial data that you read in and subset it.  Do this randomly.  Look at 'subset_n' or 'subset_frac' on the cheatsheet.  Pay careful attention to the 'replace' argument.  If replace is TRUE it will sample with replacement so you could get the same row twice.  The reason to do this for the initial data is that there each cell is in only one row. If so inclined, you can figure out how to do it for your tidied data.)
+
+1) A timecourse of expression levels where each line is the timecourse for a different cell.  It would be nice, however, to separate CFP and YFP into their own plots.  Please color code the lines so that the experimental cells are one color and the control cells are another. You can let R pick the colors for you or figure out how to do that yourself using the cheat sheet.
+
+There is one thing that is subtle about this.  You want R to automatically separate CFP and YFP into different plots (hint: using facet_grid().  But facet grid facets based on the values of a single variable (see the examples from class)).  Depending on how you did it, cfp and yfp levels might be in separate columns meaning that ggplot is thinking about them as separate variables.  This is a reasonable, tidy organization. But for this plot it might not work...
+
+
+
+```{r}
+# code for plot 2.1 here
+
+
+```
+
+It may be hard to see the individual lines completely on the plot you made.  There is one more aesthetic that we didn't talk about in class, and that is the transparency of the geometric object.  Usually, this is something that you will set for all the objects and not just for particular ones.  To set an aesthetic for all of the objects and not have it depend on the value of a particular variable, you don't put it in the aes() part, and you have to assign it a definite value because it can't look to a variable to get its value.  So, for example, you would do something like:
+
+ggplot(data)+geom_object(aes(stuff in here),alpha=.3)
+
+alpha is the transparency aesthetic.  This tells ggplot to make all of the objects transparent at a level of 0.3.  alpha runs from 0 to 1 from 0 being transparent and 1 being opaque.  By default it is 1.
+```{r}
+# plot 2.1 with transparency
+
+
+```
+
+
+
+
+
+2) Unfortunately, some cells weren't around very long. That data isn't nearly as useful as cells that stuck around for a while.  Can you figure out which cells stuck around for at least 10 frames? (hint: look at the data wrangling cheat sheet under 'summarise data' and figure out how the count() function works).  Make a plot where the x axis is just cell ID and the y axis is persistence (how many frames it was in).  Why don't you arrange your data frame so that the persistence counts are in order from smallest to largest.
+
+
+```{r}
+# code for plot 2.2 persistence
+```
+
+That probably looked a bit messy even though you arranged it ahead of time.
+
+Go here: https://trinkerrstuff.wordpress.com/2012/10/15/how-do-i-re-arrange-ordering-a-plot/ and then here: https://www.r-bloggers.com/how-do-i-re-arrange-ordering-a-plot-revisited/ for a guide how to make the ordering stick when you plot it.  It all has to do with the arbitrary ordering the R gives your categorical variable or factor (cellID).  You need to change the ordering so that it isn't arbitrary but is under your control!
+
+Now that you know how, plot the data again so that it is sorted from smallest to largest. 
+
+```{r}
+# code for plot 2.2 persistence redone
+
+
+
+```
+
+Since you have the data, make a histogram or a density plot of the persistence as well.
+```{r}
+# code for the histogram
+```
+
+
+
+3) Plot the trajectories of 5 experimental cells together in the cfp-yfp phase space - i.e. where the x-axis is the cfp level and the y-axis is the yfp level. Have the trajectory lines change color according to time. Just to make sure the plot is interesting, you don't want to plot cells with just a few timepoints.  Make sure that all the cells you use are around for at least 50 timepoints.  
+
+How would you do that last part?  You already figured out the persistence time.  How, think creatively about joins.  Then make use of filtering.  Then choose your cells (by hand or you could make use of the command below along with some more filtering and the %in% command).  Or perhaps you will figure out another way to do it.
+```{r}
+vectWithReplicates=c(4,6,2,4,5,3,2,7,8,12)
+vectUnique=unique(vectWithReplicates)
+```
+
+```{r}
+#code for 2.3
+
+```
+
+Do one more thing with these 5 cells.  Make a plot like you did in 2.1 with cfp and yfp levels versus time.  Except just for these 5 cells.  Color the trajectories by cellID.
+Notice that when you do this, it gives you a legend to tell you which color represents which cell.  Imagine if you tried to plot different colors for every cell in 2.1!  The legend would be so big because there were so many cells that you wouldn't be able to see the plot.  To turn off the legend, you can add onto the ggplot command like:
+
+ggplot(data)+geom_object(stuff that goes in here) + guides(aestheticType='none').  In this case, the relevant aesthetic is color so you would use +guides(color='none')
+
+```{r}
+#code for plotting timecourses for the 5 cells with the cells colored
+
+```
+
