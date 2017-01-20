@@ -1,0 +1,272 @@
+---
+title: "BIOM262 In-class material from 17,19 January 2017"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+### Helpful links
+
+[Cheatsheets](https://www.rstudio.com/resources/cheatsheets/) for using R including ones for tidyr/dplyr (Data transformation cheat sheet) and for ggplot2 (Data Visualization cheat sheet).  There are also some for basic R, R markdown language, advanced R, RStudio, etc.
+
+[The ggplot2 website](http://ggplot2.org/) including links to the [online documentation](http://docs.ggplot2.org) which has examples. It also has links to two books that have been written about ggplot2.  You have full electronic access to [the one written by ggplot2's author](http://dx.doi.org/10.1007/978-0-387-98141-3) through the UCSD library
+
+In addition to the help documention ( ?command at the console prompt), a lot of R packages come with 'vignettes' which are writeups with examples of what the package is supposed to do.  You can get the one for tidyr by typing vignette('tidy-data').  Alternatively, go to the package tab, scroll down to tidyr, click the link, and you'll get information about the package including some documentation and all its functions.  In the documents you see 'User guides, package vignettes and other documentation.'  This has a nice vignette about tidy data.
+
+Another aritcle about tidy data is [here](http://vita.had.co.nz/papers/tidy-data.html)
+
+[This page](https://rpubs.com/bradleyboehmke/data_wrangling) walks you through some of the functions in tidyr and dplyr.
+
+And it is pretty trivial to find [more](https://www.google.com/search?q=R+pubs+tidyr)
+
+[r-bloggers](https://www.r-bloggers.com/) is just what it sounds like. It posts some useful information and links.
+
+For making graphs and getting ideas for figures, the [R Graph Gallery](http://www.r-graph-gallery.com/) is great. All the associated code is there so if you see a figure you like you can see how to do it yourself. Note that there are other ways to plot in R, not just ggplot2, and so many of these use other packages or just 'base' R - the functionality that comes built into R without any packages.
+
+
+
+
+### Basic R
+
+```{r}
+x = 10
+x
+
+x <- 9
+y='hello'
+z=FALSE
+
+```
+
+
+How to use comments
+```{r}
+
+x = 10 # x=4
+
+```
+
+
+arithmetic
+```{r}
+x+4
+
+z+9 #prediction result
+
+(x+4)*(z-10)
+
+```
+c()
+```{r}
+
+v=c(3,5,7,2,67,8,3,21,3)
+u=c('hello','there','this','is','a','character','vector')
+
+w=c('hello','the','value','is',1)# prediction
+k=list('hello','the','value','is',1)
+
+k
+```
+access parts of a vector
+```{r}
+
+
+v[5]
+twoDigitIndex=c(5,1)
+twoDigitsFromv=v[twoDigitIndex]
+# extract two elements from v at the same time
+
+
+```
+
+```{r}
+v[5:1]
+```
+
+
+arithmetic on vectors
+```{r}
+
+
+a=c(9,3)
+b=c(-4,0)
+a*b # predicted result
+a>b
+a<b
+a==b
+a!=b
+a<=b
+a>=b
+
+
+```
+
+#### Loading libraries.  These need to be installed first (using the Packages tab in RStudio for instance)
+
+```{r}
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(readr)
+```
+
+
+
+```{r}
+
+godata=read.csv("http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/GOData.csv",stringsAsFactors=FALSE)
+godata
+
+
+```
+
+
+make godata tidy
+```{r}
+godata=tbl_df(godata)
+
+godata=gather(godata,expressionLevel,frequency,-GO.term)
+godata
+
+
+
+
+
+```
+
+
+```{r}
+godata$GO.term=as.factor(godata$GO.term)
+godata
+```
+
+
+```{r}
+
+gilad=tbl_df(read.csv('http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/giladData.csv'))
+gilad
+
+```
+
+
+
+gather(data frame , header of the new column with the current column headers, header of the new column with the values , which columns to gather)
+
+```{r}
+gilad=gather(gilad,identifier,expressionLevel,M372.none.4:M376.Smeg.4)
+
+```
+```{r}
+gilad=separate(gilad, identifier, into=c("individual","infection","time"))
+gilad
+```
+
+
+separate(gilad, identifier, into=c("individual","infection","time"))
+
+Choosing rows
+filter
+
+```{r}
+twoGenes=filter( gilad, name=="FGR" | name=="CFH")
+```
+
+Arrange the table
+
+```{r}
+arrange(twoGenes,expressionLevel)
+```
+Subset by columns
+```{r}
+select(twoGenes, id,name,individual)
+```
+
+
+Make a new column
+
+```{r}
+twoGenes=mutate(twoGenes, aboveThreshold = expressionLevel>2)
+twoGenes=mutate(twoGenes,highOrLow='hi',newColumn='newcol')
+#Whoops, made too many columns!
+twoGenes=select(twoGenes,-newColumn)
+# We want the relevant ones to be 'low'
+twoGenes$highOrLow[twoGenes$aboveThreshold==FALSE]='low'
+twoGenes
+```
+
+Grouping
+
+```{r}
+gilad=group_by(gilad, infection,time)
+gilad
+```
+
+Summary functions - collapses rows by summarizing groups of them.  Most useful for a grouped_df 
+```{r}
+summaryGilad=summarize(gilad,averageLevel=mean(expressionLevel))
+summaryGilad
+
+
+```
+membership:  %in%
+
+
+```{r}
+genesToLookAt=c("DPM1","STPG1","NFYA","GCLC")
+
+summarize(
+  group_by(
+    filter(gilad,name %in% genesToLookAt)
+    ,infection)
+  ,average=mean(expressionLevel)
+)
+# pipe %>% very useful because actions proceed from left to right
+filter(gilad,name %in% genesToLookAt) %>% group_by(infection) %>% summarize(average=mean(expressionLevel))
+
+```
+Joining
+
+```{r}
+
+giladTypes=tbl_df(read.csv('http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/giladTypes.csv'))
+giladTypes
+```
+
+```{r}
+expandedGilad=left_join(gilad,giladTypes,by=c('id','name'))
+expandedGilad
+
+```
+```{r}
+twoGenes=left_join(twoGenes,giladTypes,by=c("id","name"))
+
+
+```
+Using %in% 
+```{r}
+twoGenes=filter(twoGenes,infection %in% c('Smeg','Rv','Staph','Salm'))
+```
+
+Plotting with ggplot2
+
+```{r}
+twoGenes$name=as.factor(twoGenes$name)
+twoGenes$individual=as.factor(twoGenes$individual)
+twoGenes$infection=as.factor(twoGenes$infection)
+twoGenes$time=as.numeric(twoGenes$time)
+
+ggplot(twoGenes)+geom_point(aes(x=infection,y=expressionLevel,color=time))+facet_grid(individual~.)
+
+```
+```{r}
+ggplot(twoGenes)+geom_line(aes(x=time,y=expressionLevel,group=individual,color=individual))+facet_grid(infection~name) 
+```
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
