@@ -1,0 +1,45 @@
+---
+title: "BIOM262 W2017. 7 Feb 2017"
+output: html_notebook
+---
+
+#### Load in packages
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(readr)
+```
+
+#### Read in data
+
+```{r}
+original_data=read_delim('http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/Brauer2008_DataSet1.tds',delim='\t')
+```
+
+```{r}
+View(original_data)
+```
+
+
+Variables are:
+
+conditions: G0.05, G0.1, ...
+  nutrient
+  rate
+GID
+YORF
+GWEIGHT
+NAME -> split by double bars into:
+  NAME
+  BP
+  MF
+  systematic_name
+  something_elese
+expression
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
