@@ -1,0 +1,202 @@
+---
+title: "BIOM 262. Winter 2017. Stats component. Midterm question"
+output: html_notebook
+---
+
+
+```{r}
+library(readr)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+#### Install and load GEO interface package from bioconductor
+##### don't update all the packages if it asks (answer: n), unless it won't work otherwise.  You will have to go down to the Console window to answer it
+```{r}
+source("http://www.bioconductor.org/biocLite.R")
+biocLite("GEOquery")
+library(GEOquery)
+library(Biobase)
+
+```
+
+#### Get the dataset
+```{r}
+gds=getGEO('GDS2910',GSEMatrix=TRUE)
+```
+
+If you look at the Environment, you will see that this is a GDS object.  This is a particular object from this GEOquery package. Let's do some processing to throw out some of the conditions and get it into a few data frames
+```{r}
+# convert the data into an 'Expression Set' (another variable type from the GEOquery package)
+# This may print out errors "seek on a gzfile connection returned an internal error" - just ignore them
+eset=GDS2eSet(gds)
+
+# At this point, we won't be using gds anymore.  It is really big so you might as well delete it from the environment 
+
+rm(gds) #you can also do this manually in the Environment pane by clicking the checkbox next to gds and hitting the broom
+```
+
+Extract information from the eset variable
+
+```{r}
+# get a tbl_df data frame with descriptions of each experiment
+descriptions=tbl_df(pData(eset)) # pData is a function from Biobase
+rownames(descriptions)=c()  # R can name rows and columns in a data frame.  Naming the rows here is confusing because in this dataset they are the same as the first column. This removes them in order to remove the possibility of confusion (they will be implicitly named 1...191)
+
+# get  the expression data.  This will be in a matrix format
+exprData=exprs(eset) # exprs is a function from Biobase. it returns a matrix of just expression values. Unfortunately, it doesn't have row (i.e. gene) names.
+
+# Get the gene info in a tbl_df data frame
+geneInfo=tbl_df(fData(eset))
+
+# probably don't need all that gene info.  Just keep
+```
+
+Now we need to combine the exprData with geneInfo into a data frame.  Hopefully, exprData has 13056 rows just like geneInfo.
+Take a look at exprData to see what it looks like (just look at a few rows so it doesn't have to display the whole thing)
+Also check the dimension sizes of the two variables
+
+```{r}
+print(dim(exprData))
+print(dim(geneInfo))
+View(exprData[1:10,])
+```
+Combine the geneInfo and exprData
+
+```{r}
+allData=tbl_df(cbind(geneInfo,exprData))
+```
+
+Take a look at allData and check whether it looks like what you expect - a bunch of columns of gene information followed by the expression data
+
+If it looks good, you can now get rid of the eset, exprData, and geneInfo to save on memory [just in case your computer is running low]
+
+Also take a look at the descriptions data frame.
+
+
+### Now it is your turn
+
+The description data frame is useful but could be better.  In particular, it would be nice if the time variable were numeric (quantitative).  Do this and get rid of any extra columns you generate. Also get rid of the 'description' column
+
+```{r}
+
+```
+
+
+The allData data frame has what we need, but it isn't tidy and the column headings are meaningless unless we cross-reference them with the descriptions data frame. It would be nice to have it in tidy format with one expression value on each line.
+
+Before doing this, however, we probably don't need all that gene information.  Just keep:
+Gene symbol, Platform_ORF, GO:Function, GO:Process, GO:Component, and Chromosome annotation (and the expression columns of course )
+
+Note: when you have spaces in a column name, you need to do one of two things.  Either (1) enclose the column name in ``  [not the regular quotes but the back ones, right under the tilde in standard US layout keyboards].  Or (2) use the one_of(c("name with space","name 2 with spaces")) to specify the columns to include and -one_of(c("name with spaces","name 2 with spaces")) to exclude columns
+
+```{r}
+
+```
+
+
+For this assignment, we also don't need all the data.  Just keep the experiments on heat shock and oxidative stress.  This will be a subset of the columns.
+
+You could approach this in two ways:
+
+  1) Make allData tidy and then remove rows that are from experiments we don't want
+  2) Remove columns from allData that we don't want and then make it tidy
+  
+I'd be inclined to do the 2nd option the tidied dataset is going to be really long and if we remove the columns beforehand, we'll never have to make the really long tidied dataset (just a very long one)
+
+Either approach, however, should get you to the same place
+
+Down below you will combine this expression data information with the description data frame and so be smart about how you name your new column with the GSMXXXXX values
+
+Hint: The %in% command might be useful.  Remember that this creates a vector of TRUE and FALSE.  To switch them use !
+
+```{r}
+
+
+```
+
+Now you have a tidy data frame with gene information and expression values.  But it doesn't have the experiment information integrated - that is still in the descriptions data frame.  Combine them all into one.
+
+```{r}
+
+```
+
+
+
+The gene information is a bit of a mess.  Gene symbol is useful because those are the common names of genes. Platform_ORF is a unique gene name (even if there is no common name).  The GO information, however, has a bunch of //// in it that divides GO levels.  Just keep the first level (before the first set of ////) and discard the rest in each GO column
+
+Similarly, the chromosome column is too unwieldy.  We really just want the chromosome (like I, or II, etc.).  
+
+Before doing either of these, take a look at a bunch of the entries just to get a sense of what these look like
+
+```{r}
+
+```
+
+Now do your processing
+```{r}
+
+```
+
+
+Two final preprocessing steps:  (a) For some of the conditions they measured two strains of S. paradoxus.  For simplicity, get rid of strain 2 and then remove the strain column
+(b) Remove any rows with NA in the expression column
+
+
+```{r}
+
+```
+
+Do some plotting to explore your data.  Choose the gene MSN2 and a gene of your choice and plot their expression levels versus time for each (species x stress) condition.  Plot both stresses on the same plot (in different colors) but separate the species and the genes into different plots.  [Hint: facet_grid]
+
+```{r}
+
+```
+
+Use geom_smooth to add regression lines for each of the situations you plotted above
+
+```{r}
+
+```
+
+
+Now, using a qvalue cutoff of 0.1 and only the oxidative stress, find all genes that significantly increase in expression over time in either S. paradoxus or S. cerevisiae (positive slope) but significantly decrease in the other (negative slope)
+
+
+There are several steps to answering this question, so take it in pieces and plan it out first. Remember to load the appropriate libraries
+```{r}
+
+```
+
+
+```{r}
+
+
+
+
+
+```
+
+```{r}
+
+```
+
+Plot the slopes for these genes in the following way:  species on the x axis, slope estimate on the y axis. Plot the estimates for each gene in each species by points and then connect the same gene in the two species with a line.  Color code the points by the q value
+
+
+```{r}
+
+```
+
+
+As a final step, plot the original expression timecourses for the genes you just identified for all the species and both stresses, like what you did for MSN2 and another gene above, except this time have all the species together on a plot and separate the stresses.  Have the genes in the columns in your facet_grid and the stresses in the rows
+
+
+```{r}
+
+
+```
+
+
+
