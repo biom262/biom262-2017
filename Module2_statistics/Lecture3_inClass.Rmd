@@ -12,6 +12,13 @@ library(readr)
 ```
 
 #### Read in data
+Brauer 2008 used microarrays to test the effect of starvation and growth rate on S. cerevisiae. If you give yeast plenty of nutrients (a rich media), except that you sharply restrict its supply of one nutrient, you can control the growth rate to whatever level you desire. For example, you could limit the yeast’s supply of glucose, of leucine (an essential amino acid), or of ammonium (a source of nitrogen).
+
+Starving the yeast of these nutrients lets us find genes that:
+
+- Raise or lower their activity in response to growth rate. Growth-rate dependent expression patterns can tell us a lot about cell cycle control, and how the cell responds to stress.
+- Respond differently when different nutrients are being limited. These genes may be involved in the transport or metabolism of those nutrients.
+
 
 ```{r}
 original_data=read_delim('http://labs.biology.ucsd.edu/rifkin/courses/BIOM262/Stats/W2017/Brauer2008_DataSet1.tds',delim='\t')
@@ -38,8 +45,110 @@ NAME -> split by double bars into:
   something_elese
 expression
 
+#### Tidy the data, clean it up, and remove some rows so that things run more quickly (for teaching purposes only!)
+(in class we didn't get rid of extra columns, but I do below using the select() function)
+
+```{r}
+cleaned_data = gather(original_data,condition,expression,G0.05:U0.3) %>% separate(condition,into=c('nutrient','rate'),sep=1,convert=TRUE) %>% separate(NAME,into=c('name','BP','MF','systematic_name','other'), sep='[|][|]') %>%
+  mutate_each(funs(trimws),name:other) %>%
+  filter(!is.na(expression),systematic_name!='') %>%
+  filter(! (BP %in% c('biological process unknown','protein biosynthesis',''))) %>%
+  separate(BP,into=c('BP','asterisk'),sep='[*]',fill='right') %>%
+  select(-GID,-GWEIGHT, -YORF,-asterisk,-other)
 
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+Extract the LEU1 data
+```{r}
+leu1.data=cleaned_data %>% filter(name=='LEU1')
+```
+
+
+You can assign plots to variables like below.  But then you have to print() the variable in order to see the plot.
+These two plots are the same.  Note that they differ in where aes() is placed.
+```{r}
+leu1.plot=ggplot(data=leu1.data,aes(x=rate,y=expression,color=nutrient))+geom_line()
+
+leu1.plot.2=ggplot(data=leu1.data)+geom_line(aes(x=rate,y=expression,color=nutrient))
+print(leu1.plot)
+print(leu1.plot.2)
+```
+
+Filter data to just get leucine nutrient for LEU1
+
+```{r}
+leu1.data.L=filter(leu1.data,nutrient=='L')
+leu1.data.L
+```
+fit linear model
+```{r}
+leu1.L.model = lm(expression ~ rate,data=leu1.data.L)
+summary(leu1.L.model)
+ggplot(data=leu1.data.L,aes(x=rate,y=expression))+geom_point()
+ggplot(data=leu1.data.L,aes(x=rate,y=expression))+geom_point()+geom_smooth(method='lm',se=FALSE)
+```
+Load broom
+```{r}
+library(broom)
+```
+
+Make output of lm into a data frame
+
+```{r}
+leu1.augmented=augment(leu1.L.model,leu1.data.L)
+View(leu1.augmented)
+leu1.tidied=tidy(leu1.L.model)
+View(leu1.tidied)
+leu1.glance=glance(leu1.L.model)
+View(leu1.glance)
+
+
+```
+
+do() it for all genes in the dataset, with the appropriate grouping
+
+
+```{r}
+grouped_data = group_by(cleaned_data,systematic_name,nutrient)
+allGenes.coefficients = do(grouped_data,tidy(lm(expression~rate,.)))
+View(allGenes.coefficients)
+
+```
+
+
+Plot p values
+
+```{r}
+ggplot(data=filter(allGenes.coefficients,term=='rate'))+geom_histogram(aes(x=p.value))
+
+
+```
+
+Calculating FDR (q values)
+
+```{r}
+source('https://bioconductor.org/biocLite.R')
+```
+
+```{r}
+biocLite('qvalue')
+```
+
+```{r}
+library(qvalue)
+```
+
+
+```{r}
+allGenes.coefficients=filter(ungroup(allGenes.coefficients),!is.na(p.value))
+slope_terms=mutate(filter(allGenes.coefficients,term=='rate'),q.value=qvalue(p=p.value)$qvalues)
+
+
+```
+
+```{r}
+ggplot(data=slope_terms)+geom_histogram(aes(x=q.value))
+ggplot(data=slope_terms)+geom_point((aes(x=p.value,y=q.value)))+xlim(0,.1)+ylim(0,.1)
+```
+
