@@ -9,9 +9,18 @@ The goal of this assignment is to use some of the techniques learned in class to
 
 ## Homework Data
 
-For the homework assignment, we will use the same genotype and gene expression data that we
-used in class. This time the gene expression TPM values have already been created and the genes
-have already been filtered to those that are expressed and on chr22.
+For the homework assignment, we will use the genotype and gene expression data in the directory:
+`/projects/ps-yeolab/biom262_2017/genetic_variation_mcvicker/homework`
+
+These files are very similar to the ones that we used in class. This time the gene expression TPM values have already been created and the genes have already been filtered to those that are expressed and on chr22.
+
+### Files:
+* samples.txt - sample identifiers for the 53 individuals in our study
+* chr22_genotypes.txt - genotypes and SNP information
+* chr22_gene_info.txt - information about the filtered set of genes on chr22
+* chr22_gene_expr_tpm.txt - gene expression (TPM) matrix for the genes
+
+### Reading data from files:
 
 Read in the identifiers of the samples.
 ```{r}
