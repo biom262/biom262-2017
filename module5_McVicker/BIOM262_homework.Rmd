@@ -1,0 +1,67 @@
+---
+title: "BIOM262 Homework"
+output: html_notebook
+---
+
+## Homework assignment 
+
+The goal of this assignment is to use some of the techniques learned in class to find some eQTLs.
+
+## Homework Data
+
+For the homework assignment, we will use the same genotype and gene expression data that we
+used in class. This time the gene expression TPM values have already been created and the genes
+have already been filtered to those that are expressed and on chr22.
+
+Read in the identifiers of the samples.
+```{r}
+# use 'as.characeter' to make sure we have the 
+# sample names as a vector of character strings (rather than a factor)
+sample.tab <- read.table("samples.txt", header=F)
+sample.names <- as.character(sample.tab$V1)
+head(sample.names)
+```
+
+Read in SNP genotypes for each of the samples. The first 5 columns give information about the SNP, the remaining columns give the genotypes for each sample. The genotypes are coded as the number of copies of allele2 that each individual carries and can therefore be 0, 1, or 2. 
+
+For convenience, split the genotype table into one containing information about the SNPs (first 4 columns) and a second genotype matrix containing just the genotypes.
+
+```{r}
+genotypes.tab <- read.table("chr22_genotypes.txt", header=T)
+genotype.info <- genotypes.tab[,1:5]
+genotype.matrix <- as.matrix(genotypes.tab[,sample.names])
+head(genotype.matrix)
+head(genotype.info)
+```
+
+Read in gene expression data for each of the samples. The read counts have already been converted to TPM and the table has been filtered to expressed genes on chr22. The gene_info table has the columns with gene information (such as gene name, chromosome position, etc). The rows of the gene_info table match those of the expression table (e.g. row1 of both tables is for gene ENSG00000215270). The expression table, contains only gene expression values (TPM).
+
+```{r}
+gene.info <- read.table("chr22_gene_info.txt", header=T)
+gene.expr.matrix <- as.matrix(read.table("chr22_gene_expr_tpm.txt", header=T))
+head(gene.info)
+head(gene.expr.matrix)
+```
+
+
+## Homework Questions
+
+Use the SNP genotype and gene expression data to find eQTLs for the gene ENSG00000100376. Test all SNPs that are within 100kb of the gene (from start and end) for association with the gene's expression using a linear model. Compute the p-values for this association.
+
+*Q1 (1pt):* How many SNPs are within 100kb of the gene?
+
+*Q2 (1pt):* How many SNPs have a p-value < 0.05?
+
+*Q3 (1pt):* What is the minimum P-value of all of the tested SNPs? 
+
+*Q4 (2 pts):* Make a plot showing the tested SNPs' positions along chr22 and their -log10 p-values:
+
+*Q5 (2 pts):* What is the ID (rs#) of the SNP with the lowest p-value?
+
+*Q6 (2 pts):* How far is the SNP with the lowest p-value from the start of the gene?
+
+*Q7 (2 pts):* Plot the gene expression values (TPM) of the gene grouped by the genotype of the SNP with the lowest p-value. This can be done as a scatter plot (like we did in class), boxplot, or violin plot, etc.
+
+
+
+
