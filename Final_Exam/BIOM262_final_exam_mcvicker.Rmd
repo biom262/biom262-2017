@@ -14,12 +14,12 @@ You make a quantile-quantile plot of the observed p-values for each SNP
 and observe something like the following:
 
 ```{r}
-gwas.tab <- read.table("GWAS.txt", header=T)
+gwas.tab <- read.table("/Users/emily/Desktop/BIOM262_2017/GWAS.txt", header=T)
 
 expect.p <- 1:nrow(gwas.tab) / nrow(gwas.tab)
 obs.p <- gwas.tab$p.val
 qqplot(-log10(expect.p), -log10(obs.p),
-       xlab="observed -log10(p-values)",
+       xlab="expected -log10(p-values)",
        ylab="observed -log10(p-values)")
 abline(a=0, b=1, col="red")
 ```
@@ -29,7 +29,7 @@ Next, you zoom in, to show the less extreme p-values in greater detail:
 ```{r}
 qqplot(-log10(expect.p), -log10(obs.p),
        ylim=c(0, 10),
-       xlab="observed -log10(p-values)",
+       xlab="expected -log10(p-values)",
        ylab="observed -log10(p-values)")
 abline(a=0, b=1, col="red")
 
